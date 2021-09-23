@@ -12,3 +12,14 @@ DRIVER=iavf NODE_LABEL=worker-vm make build
 oc apply -f examples/mcp-worker-vm.yaml     # pre-defined yaml
 oc apply -f oot-driver-machine-config.yaml  # generated yaml
 ```
+
+To load both ice and iavf drivers at the same time, and with specific driver versions,
+```
+DRIVER=ice,iavf ICE_DRIVER_VERSION=1.6.4 IAVF_DRIVER_VERSION=4.2.7 NODE_LABEL=worker-vm make build
+oc apply -f examples/mcp-worker-vm.yaml     # pre-defined yaml
+oc apply -f oot-driver-machine-config.yaml  # generated yaml
+```
+
+To unload the driver,
+`oc delete -f oot-driver-machine-config.yaml`
+ 
