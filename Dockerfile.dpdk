@@ -1,0 +1,68 @@
+ARG DRIVER_TOOLKIT_IMAGE
+ARG OUTPUT_BASE_IMAGE=registry.access.redhat.com/ubi8:latest
+
+FROM ${DRIVER_TOOLKIT_IMAGE} as builder
+ARG KMODVER=20.11.1
+ENV DPDK_VERSION=${KMODVER}
+ARG KVER
+
+WORKDIR /build/
+
+COPY kernel ./files/kernel
+COPY driver ./files/driver
+
+# install kernel package only when necessary
+RUN if [[ "${KVER}" == *"rt"* ]]; then \
+    RT="rt-" ;\
+    KERNEL_CORE_FILE=$(rpm -qa | grep "kernel-rt-core-") ;\
+    KERNEL_VERSION=`echo $KERNEL_CORE_FILE | sed "s#kernel-rt-core-##"` ;\
+    else \
+    RT="" ;\
+    KERNEL_CORE_FILE=$(rpm -qa | grep "kernel-core-") ;\
+    KERNEL_VERSION=`echo $KERNEL_CORE_FILE | sed "s#kernel-core-##"` ;\
+    fi ;\
+    if [[ "${KERNEL_VERSION}" != "${KVER}" ]]; then \
+    rpm -Uvh --nodeps ./files/kernel/kernel-${RT}devel-${KVER}.rpm --force; \
+    rpm -Uvh --nodeps ./files/kernel/kernel-${RT}core-${KVER}.rpm --force; \
+    fi
+
+ENV DPDK_DIR /usr/src/dpdk-stable-${DPDK_VERION}
+ENV RTE_TARGET=x86_64-native-linuxapp-gcc
+ENV RTE_SDK=${DPDK_DIR}
+ENV PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig/
+
+RUN pip3 install meson ninja
+
+RUN if [[ ! -e ./files/driver/dpdk-${DPDK_VERSION}.tar.gz ]]; then \
+        wget "http://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.gz" ;\
+    else \
+        mv ./files/driver/dpdk-${DPDK_VERSION}.tar.gz ./ ;\
+    fi
+
+RUN tar zxf dpdk-${DPDK_VERSION}.tar.gz && rm dpdk-${DPDK_VERSION}.tar.gz 
+WORKDIR /build/dpdk-stable-${DPDK_VERSION}
+
+RUN meson build -Denable_kmods=true -Dkernel_dir="/lib/modules/${KVER}" && \
+    cd build  && ninja && ninja install 
+
+
+FROM ${OUTPUT_BASE_IMAGE}
+ARG KVER
+ENV KERNEL_VERSION=$KVER 
+
+ARG KMODVER=20.11.1 
+ENV DPDK_VERSION=${KMODVER}
+
+RUN dnf install --disablerepo=* --enablerepo=ubi-8-baseos --setopt=install_weak_deps=False -y kmod
+
+COPY --from=builder /build/dpdk-stable-${DPDK_VERSION}/build/kernel/linux/kni/rte_kni.ko /oot-driver/
+COPY --from=builder /lib/modules/$KVER/modules.order /lib/modules/$KVER/modules.order
+COPY --from=builder /lib/modules/$KVER/modules.builtin /lib/modules/$KVER/modules.builtin
+COPY scripts/entrypoint.sh /usr/local/bin/
+COPY scripts/dpdk-load.sh /usr/local/bin/load.sh
+COPY scripts/dpdk-unload.sh /usr/local/bin/unload.sh
+RUN chmod +x /usr/local/bin/load.sh
+RUN chmod +x /usr/local/bin/unload.sh
+
+CMD ["/entrypoint.sh"]
+
