@@ -20,6 +20,9 @@ oc apply -f examples/mcp-worker-vm.yaml     # pre-defined yaml
 oc apply -f oot-driver-machine-config.yaml  # generated yaml
 ```
 
+To load the drivers for a custom kernel, for example if "NODE_LABEL" identifies the nodes that have a customer driver installed, first copy the customer kernel-core, kernel-devel files into the kernel folder, then build the drivers as normal, `DRIVER=iavf NODE_LABEL=worker-vm make build`. The build process will get the kernel information from the target machine, then search for the kernel packages under the kernel folder and use the customer kernel packages to build.
+ 
 To unload the driver,
 `oc delete -f oot-driver-machine-config.yaml`
+
  
