@@ -25,11 +25,10 @@ To unload the driver,
 
 ## Background
 
-The original work (https://github.com/openshift-kni/cnf-features-deploy/tree/master/tools/oot-driver) has a dependency on two operators: [Special Resource Operator](https://github.com/openshift-psap/special-resource-operator), [Node Feature Discovery Operator](https://docs.openshift.com/container-platform/4.8/scalability_and_performance/psap-node-feature-discovery-operator.html). For simple lab setup and quick trial, running these extra operators may not be necessary and sometimes can even cause delay just to understand and setup properly.
+The original work (https://github.com/openshift-kni/cnf-features-deploy/tree/master/tools/oot-driver) has a dependency on two operators: [Special Resource Operator](https://github.com/openshift-psap/special-resource-operator), [Node Feature Discovery Operator](https://docs.openshift.com/container-platform/4.8/scalability_and_performance/psap-node-feature-discovery-operator.html). For simple lab setup and quick trial, running these extra operators may not be necessary. Also, SRO (Special Resource Operator) is OCP 4.9 preview. To get it work with OCP 4.8 may not be smooth.
 
 To make it simple, the dependency on the aforementioned operators is removed from the original work. The majority content of this repo is a direct copy from the origin work with minor modification to remove these  dependencies.
 
 For lab use, driver binary signing is not included, though it is available in the original work.
-
 
 
