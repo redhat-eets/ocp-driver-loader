@@ -46,6 +46,7 @@ ENV KERNEL_VERSION=$KVER
 RUN dnf install --disablerepo=* --enablerepo=ubi-8-baseos --setopt=install_weak_deps=False -y kmod
 
 COPY --from=builder /lib/modules/$KVER/updates/drivers/net/ethernet/intel/ice/ice.ko /oot-driver/
+COPY --from=builder /lib/modules/$KVER/updates/drivers/net/ethernet/intel/auxiliary/auxiliary.ko /oot-driver/
 COPY --from=builder /lib/modules/$KVER/modules.order /lib/modules/$KVER/modules.order
 COPY --from=builder /lib/modules/$KVER/modules.builtin /lib/modules/$KVER/modules.builtin
 COPY scripts/entrypoint.sh /usr/local/bin/

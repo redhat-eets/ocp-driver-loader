@@ -9,7 +9,10 @@ fi
 
 # Unload will return the in-tree driver
 rmmod ice
+rmmod auxiliary
+
 rm -rf /lib/modules/$(uname -r)/updates/drivers/net/ethernet/intel/ice/
+
 depmod
 modprobe ice
 

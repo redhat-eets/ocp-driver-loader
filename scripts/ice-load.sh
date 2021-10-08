@@ -10,11 +10,14 @@ fi
 mkdir -p /lib/modules/$(uname -r)/updates/drivers/net/ethernet/intel/ice/
 
 # Link OPAE drivers
-ln -s /oot-driver/*.ko "/lib/modules/$(uname -r)/updates/drivers/net/ethernet/intel/ice/"
+ln -s /oot-driver/ice.ko "/lib/modules/$(uname -r)/updates/drivers/net/ethernet/intel/ice/"
+ln -s /oot-driver/auxiliary.ko "/lib/modules/$(uname -r)/updates/drivers/net/ethernet/intel/auxiliary"
 
 depmod
 
 rmmod ice || true
+rmmod auxiliary || true 
+insmod /oot-driver/auxiliary.ko
 modprobe ice
 
 echo "oot ice driver loaded"

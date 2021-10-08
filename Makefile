@@ -1,4 +1,4 @@
-REGISTRY ?= 10.16.231.128:5000
+REGISTRY ?= 10.16.231.113:5000
 REGISTRY_USER ?= "openshift"
 REGISTRY_PASSWORD ?= "redhat"
 REGISTRY_CERT ?= "domain.crt"
@@ -18,7 +18,7 @@ STD_KERNEL_VERSIONS := $(shell hack/get_kernel_version.sh $(DRIVER_TOOLKIT_IMAGE
 CUSTOM_KERNEL_FILES := $(wildcard kernel/*$(KERNEL_VERSION).rpm)
 # DRIVER: comma seperated driver name, for example, "ice,iavf"
 DRIVER ?= ice
-ICE_DRIVER_VERSION ?= 1.6.4
+ICE_DRIVER_VERSION ?= 1.7.0_rc79
 IAVF_DRIVER_VERSION ?= 4.2.7
 DPDK_VERSION ?= 20.11.1
 
@@ -29,10 +29,9 @@ IMAGE_DIR ?= oot-driver
 registry_cert:
 	@{ \
 	set -e ;\
-	if ! oc get configmap registry-cas -n openshift-config >/dev/null; then \
-	    oc create configmap registry-cas -n openshift-config --from-file=$(subst :,..,${REGISTRY})=${REGISTRY_CERT}; \
-	    oc patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedCA":{"name":"registry-cas"}}}' --type=merge; \
-	fi \
+	oc delete configmap registry-cas -n openshift-config 2>/dev/null || true \
+	oc create configmap registry-cas -n openshift-config --from-file=$(subst :,..,${REGISTRY})=${REGISTRY_CERT} \
+	oc patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedCA":{"name":"registry-cas"}}}' --type=merge \
 	}
 
 login_registry:
@@ -46,7 +45,7 @@ build: check_kernel login_registry
 
 check_kernel:
 ifeq (,$(findstring $(KERNEL_VERSION),$(STD_KERNEL_VERSIONS)))
-        $(info KERNEL_VERSION: $(KERNEL_VERSION), STD_KERNEL_VERSIONS: $(STD_KERNEL_VERSIONS))
+        $(info KERNEL_VERSION: $(KERNEL_VERSION); STD_KERNEL_VERSIONS: $(STD_KERNEL_VERSIONS))
 	$(info using customer kernel, checking kernel folder for packages)
 	@{ \
 	set -eu ;\
