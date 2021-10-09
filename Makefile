@@ -6,7 +6,7 @@ OPENSHIFT_SECRET_FILE ?= $(HOME)/.docker/config.json
 KUBECONFIG ?= $(HOME)/.kube/config
 NODE_LABEL ?= "worker-cnf"
 
-DRIVER_TOOLKIT_IMAGE ?= $(shell oc adm release info --image-for=driver-toolkit -a $(OPENSHIFT_SECRET_FILE))
+DRIVER_TOOLKIT_IMAGE ?= $(shell oc adm release info --image-for=driver-toolkit)
 KERNEL_VERSION ?= $(shell hack/get_kernel_version_from_node.sh $(NODE_LABEL) $(KUBECONFIG))
 
 STD_KERNEL_VERSIONS := $(shell hack/get_kernel_version.sh $(DRIVER_TOOLKIT_IMAGE) $(OPENSHIFT_SECRET_FILE))
