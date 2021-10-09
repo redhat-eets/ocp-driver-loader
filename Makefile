@@ -1,10 +1,14 @@
-REGISTRY ?= 10.16.231.128:5000
+REGISTRY ?= 10.16.231.113:5000
 REGISTRY_USER ?= "openshift"
 REGISTRY_PASSWORD ?= "redhat"
 REGISTRY_CERT ?= "domain.crt"
-OPENSHIFT_SECRET_FILE ?= $(HOME)/.docker/config.json
+OPENSHIFT_SECRET_FILE ?= pull-secrets.json 
 KUBECONFIG ?= $(HOME)/.kube/config
 NODE_LABEL ?= "worker-cnf"
+
+$(shell oc get secret/pull-secret -n openshift-config --template='{{index .data ".dockerconfigjson" | base64decode}}' > ${OPENSHIFT_SECRET_FILE})
+$(shell oc registry login --skip-check --registry="${REGISTRY}" --auth-basic="${REGISTRY_USER}:${REGISTRY_PASSWORD}" --to=${OPENSHIFT_SECRET_FILE})
+$(shell oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=${OPENSHIFT_SECRET_FILE})
 
 DRIVER_TOOLKIT_IMAGE ?= $(shell oc adm release info --image-for=driver-toolkit)
 KERNEL_VERSION ?= $(shell hack/get_kernel_version_from_node.sh $(NODE_LABEL) $(KUBECONFIG))
@@ -20,12 +24,7 @@ DPDK_VERSION ?= 20.11.1
 
 IMAGE_DIR ?= oot-driver
 
-.PHONY: pull_secret registry_cert login_registry build check_kernel
-
-pull_secret:
-	oc get secret/pull-secret -n openshift-config --template='{{index .data ".dockerconfigjson" | base64decode}}' > ${OPENSHIFT_SECRET_FILE}
-	oc registry login --skip-check --registry="${REGISTRY}" --auth-basic="${REGISTRY_USER}:${REGISTRY_PASSWORD}" --to=${OPENSHIFT_SECRET_FILE}
-	oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=${OPENSHIFT_SECRET_FILE}
+.PHONY: registry_cert login_registry build check_kernel
 
 registry_cert:
 	@{ \
@@ -41,12 +40,13 @@ ifdef REGISTRY_USER
 	podman login -u ${REGISTRY_USER} -p ${REGISTRY_PASSWORD} ${REGISTRY}
 endif
 
-build: check_kernel login_registry pull_secret
+build: check_kernel login_registry 
 	hack/build.sh $(DRIVER_TOOLKIT_IMAGE) $(KERNEL_VERSION) $(DRIVER) $(REGISTRY) $(IMAGE_DIR) $(NODE_LABEL) "ice=$(ICE_DRIVER_VERSION),iavf=$(IAVF_DRIVER_VERSION),dpdk=${DPDK_VERSION}"
 
 
 check_kernel:
 ifeq (,$(findstring $(KERNEL_VERSION),$(STD_KERNEL_VERSIONS)))
+        $(info KERNEL_VERSION: $(KERNEL_VERSION), STD_KERNEL_VERSIONS: $(STD_KERNEL_VERSIONS))
 	$(info using customer kernel, checking kernel folder for packages)
 	@{ \
 	set -eu ;\
