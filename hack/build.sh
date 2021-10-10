@@ -30,5 +30,5 @@ for driver in ${array_driver[@]}; do
     export OOT_DRIVER_IMAGE_NAME=${IMAGE_DIR}/${driver}-driver-container
     envsubst < "./templates/systemd.template" >> "./oot-driver-machine-config.yaml"
     podman build --build-arg KVER=${KERNEL_VERSION} --build-arg DRIVER_TOOLKIT_IMAGE=${DRIVER_TOOLKIT_IMAGE} --build-arg KMODVER=$(eval echo \$${driver}) -t ${REGISTRY}/${OOT_DRIVER_IMAGE_NAME}:${KERNEL_VERSION} -f Dockerfile.${driver} . 
-    podman push ${REGISTRY}/${OOT_DRIVER_IMAGE_NAME}:${KERNEL_VERSION}
+    podman push --tls-verify=false ${REGISTRY}/${OOT_DRIVER_IMAGE_NAME}:${KERNEL_VERSION}
 done

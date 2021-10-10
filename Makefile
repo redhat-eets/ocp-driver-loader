@@ -1,4 +1,4 @@
-REGISTRY ?= 10.16.231.113:5000
+REGISTRY ?= 10.16.231.128:5000
 REGISTRY_USER ?= "openshift"
 REGISTRY_PASSWORD ?= "redhat"
 REGISTRY_CERT ?= "domain.crt"
@@ -37,7 +37,7 @@ registry_cert:
 
 login_registry:
 ifdef REGISTRY_USER
-	podman login -u ${REGISTRY_USER} -p ${REGISTRY_PASSWORD} ${REGISTRY}
+	podman login --tls-verify=false -u ${REGISTRY_USER} -p ${REGISTRY_PASSWORD} ${REGISTRY}
 endif
 
 build: check_kernel login_registry 
