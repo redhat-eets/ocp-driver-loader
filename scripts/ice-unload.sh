@@ -11,7 +11,8 @@ fi
 rmmod ice
 rmmod auxiliary
 
-rm -rf /lib/modules/$(uname -r)/updates/drivers/net/ethernet/intel/ice/
+rm -rf /lib/modules/$(uname -r)/updates/drivers/net/ethernet/intel/auxiliary/ || true
+rm -rf /lib/modules/$(uname -r)/updates/drivers/net/ethernet/intel/ice/ || true
 
 depmod
 modprobe ice
