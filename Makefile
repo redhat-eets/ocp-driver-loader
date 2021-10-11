@@ -21,6 +21,7 @@ DRIVER ?= ice
 ICE_DRIVER_VERSION ?= 1.6.4
 IAVF_DRIVER_VERSION ?= 4.2.7
 DPDK_VERSION ?= 20.11.1
+FW_TOOL_URL ?= https://downloadmirror.intel.com/29738/eng/e810_nvmupdatepackage_v3_00_linux.tar_.gz
 
 IMAGE_DIR ?= oot-driver
 
@@ -43,6 +44,8 @@ endif
 build: check_kernel login_registry 
 	hack/build.sh $(DRIVER_TOOLKIT_IMAGE) $(KERNEL_VERSION) $(DRIVER) $(REGISTRY) $(IMAGE_DIR) $(NODE_LABEL) "ice=$(ICE_DRIVER_VERSION),iavf=$(IAVF_DRIVER_VERSION),dpdk=${DPDK_VERSION}"
 
+e810: check_kernel login_registry
+	hack/build_flash.sh $(DRIVER_TOOLKIT_IMAGE) $(KERNEL_VERSION) $(REGISTRY) $(IMAGE_DIR) $(ICE_DRIVER_VERSION) $@ $(FW_TOOL_URL)
 
 check_kernel:
 ifeq (,$(findstring $(KERNEL_VERSION),$(STD_KERNEL_VERSIONS)))

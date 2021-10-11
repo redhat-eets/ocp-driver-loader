@@ -1,0 +1,14 @@
+ARG ICE_IMAGE
+
+FROM ${ICE_IMAGE} 
+ARG FW_TOOL_URL
+ARG KVER
+ENV KERNEL_VERSION=$KVER
+
+WORKDIR firmware
+RUN curl -L -o nvmupdate.tar.gz ${FW_TOOL_URL}
+ 
+ENV KERNEL_VERSION=$KVER
+
+CMD /usr/local/bin/load.sh; sleep infinity
+
