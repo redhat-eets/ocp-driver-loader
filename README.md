@@ -1,5 +1,7 @@
 # ocp-driver-loader
 
+## Install out-of-tree driver in openshift
+ 
 This repo provides a simple approach to load out-of-tree device driver onto openshift platform. It is 
 for lab use - not for large scale deployment.
 
@@ -22,6 +24,63 @@ To load the drivers for a custom kernel, for example if "NODE_LABEL" identifies 
  
 To unload the driver,
 `oc delete -f oot-driver-machine-config.yaml`
+
+## Custom kernel
+
+Sometimes the openshift node might use a customer kernel, not the default kernel shipped by openshift. To install driver for the customer kernel, the customer kernel files can be downloaded and put under the kernel directory before build the image, for example,
+```
+kernel/kernel-core-4.18.0-240.22.1.el8_3.x86_64.rpm
+kernel/kernel-devel-4.18.0-240.22.1.el8_3.x86_64.rpm
+```
+
+The env KERNEL_VERSION need to set to the customer kernel version,
+```
+export KERNEL_VERSION=4.18.0-240.22.1.el8_3.x86_64
+make build
+```
+
+## Update E810 firmware
+
+First build a container which the ice driver and the firmware update tool.
+```
+export ICE_DRIVER_VERSION=1.6.4
+export FW_TOOL_URL=https://downloadmirror.intel.com/29738/eng/e810_nvmupdatepackage_v3_00_linux.tar_.gz
+make e810
+```
+
+This will build a container image of name form e810:<kernel-version>. When this container image is run, it will install this ice driver. One can get inside the container and use the firmware update tool.
+
+For example,
+```
+cat <<EOF | oc create -f -
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: e810
+spec:
+  restartPolicy: Never
+  hostNetwork: true
+  containers:
+  - name: e810
+    image: 10.16.231.128:5000/oot-driver/e810:4.18.0-240.22.1.el8_3.x86_64
+    imagePullPolicy: Always
+    securityContext:
+      privileged: true
+  nodeSelector:
+    node-role.kubernetes.io/worker-cnf: ""
+EOF
+
+oc exec -it e810 sh
+# use the firmware update tool inside the container 
+```
+
+If using podman on the node directly,
+```
+podman pull 10.16.231.128:5000/oot-driver/e810:4.18.0-240.22.1.el8_3.x86_64 --tls-verify=false
+podman run --net host --name e810 --rm -d --privileged 10.16.231.128:5000/oot-driver/e810:4.18.0-240.22.1.el8_3.x86_64
+podman exec -it e810 sh
+# use the firmware update tool inside the container 
+```
 
 ## Background
 

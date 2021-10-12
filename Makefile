@@ -49,8 +49,6 @@ e810: check_kernel login_registry
 
 check_kernel:
 ifeq (,$(findstring $(KERNEL_VERSION),$(STD_KERNEL_VERSIONS)))
-        $(info KERNEL_VERSION: $(KERNEL_VERSION), STD_KERNEL_VERSIONS: $(STD_KERNEL_VERSIONS))
-	$(info using customer kernel, checking kernel folder for packages)
 	@{ \
 	set -eu ;\
 	echo $(CUSTOM_KERNEL_FILES) ;\
