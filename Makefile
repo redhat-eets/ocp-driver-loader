@@ -30,10 +30,9 @@ IMAGE_DIR ?= oot-driver
 registry_cert:
 	@{ \
 	set -e ;\
-	if ! oc get configmap registry-cas -n openshift-config >/dev/null; then \
-	    oc create configmap registry-cas -n openshift-config --from-file=$(subst :,..,${REGISTRY})=${REGISTRY_CERT}; \
-	    oc patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedCA":{"name":"registry-cas"}}}' --type=merge; \
-	fi \
+	oc delete configmap registry-cas -n openshift-config 2>/dev/null || true; \
+	oc create configmap registry-cas -n openshift-config --from-file=$(subst :,..,${REGISTRY})=${REGISTRY_CERT}; \
+	oc patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedCA":{"name":"registry-cas"}}}' --type=merge; \
 	}
 
 login_registry:
@@ -41,10 +40,10 @@ ifdef REGISTRY_USER
 	podman login --tls-verify=false -u ${REGISTRY_USER} -p ${REGISTRY_PASSWORD} ${REGISTRY}
 endif
 
-build: check_kernel login_registry 
+build: check_kernel login_registry registry_cert
 	hack/build.sh $(DRIVER_TOOLKIT_IMAGE) $(KERNEL_VERSION) $(DRIVER) $(REGISTRY) $(IMAGE_DIR) $(NODE_LABEL) "ice=$(ICE_DRIVER_VERSION),iavf=$(IAVF_DRIVER_VERSION),dpdk=${DPDK_VERSION}"
 
-e810: check_kernel login_registry
+e810: check_kernel login_registry registry_cert
 	hack/build_flash.sh $(DRIVER_TOOLKIT_IMAGE) $(KERNEL_VERSION) $(REGISTRY) $(IMAGE_DIR) $(ICE_DRIVER_VERSION) $@ $(FW_TOOL_URL)
 
 check_kernel:
