@@ -6,9 +6,9 @@ OPENSHIFT_SECRET_FILE ?= pull-secrets.json
 KUBECONFIG ?= $(HOME)/.kube/config
 NODE_LABEL ?= "worker-cnf"
 
-$(shell oc get secret/pull-secret -n openshift-config --template='{{index .data ".dockerconfigjson" | base64decode}}' > ${OPENSHIFT_SECRET_FILE})
-$(shell oc registry login --skip-check --registry="${REGISTRY}" --auth-basic="${REGISTRY_USER}:${REGISTRY_PASSWORD}" --to=${OPENSHIFT_SECRET_FILE})
-$(shell oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=${OPENSHIFT_SECRET_FILE})
+$(shell oc get secret/pull-secret -n openshift-config --template='{{index .data ".dockerconfigjson" | base64decode}}' > $(OPENSHIFT_SECRET_FILE))
+$(shell oc registry login --skip-check --registry="$(REGISTRY)" --auth-basic="$(REGISTRY_USER):$(REGISTRY_PASSWORD)" --to=$(OPENSHIFT_SECRET_FILE))
+$(shell oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=$(OPENSHIFT_SECRET_FILE))
 
 DRIVER_TOOLKIT_IMAGE ?= $(shell oc adm release info --image-for=driver-toolkit)
 KERNEL_VERSION ?= $(shell hack/get_kernel_version_from_node.sh $(NODE_LABEL) $(KUBECONFIG))
