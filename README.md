@@ -14,6 +14,27 @@ DRIVER=iavf NODE_LABEL=worker-vm make build
 oc apply -f oot-driver-machine-config.yaml  # apply generated yaml
 ```
 
+A MachineConfigPool needs to be defined (or pre-defined). A sample MachineConfigPool is shown below,
+```
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfigPool
+metadata:
+  name: worker-vm
+  namespace: openshift-machine-config-operator
+  labels:
+    machineconfiguration.openshift.io/role: worker-vm
+spec:
+  paused: false
+  machineConfigSelector:
+    matchExpressions:
+      - key: machineconfiguration.openshift.io/role
+        operator: In
+        values: [worker,worker-vm]
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/worker-vm: ""
+```
+
 To load both ice and iavf drivers at the same time, and with specific driver versions,
 ```
 DRIVER=ice,iavf ICE_DRIVER_VERSION=1.6.4 IAVF_DRIVER_VERSION=4.2.7 NODE_LABEL=worker-vm make build
